@@ -9,11 +9,13 @@
 #include <modsupport.h>
 #include <moduleobject.h>
 #include <object.h>
+#include <optional>
 #include <print>
 #include <pytypedefs.h>
 #include <string>
 #include <string_view>
 #include <unicodeobject.h>
+#include <utility>
 
 #define RET_EMPTY_STRING() return PyUnicode_FromString("")
 
@@ -24,14 +26,22 @@ namespace {
 		std::println("[demangler] [warn] {}", msg);
 	}
 
-	std::string demangle(const std::string& in) {
+	std::optional<std::string> demangle(const std::string& in) {
 		auto resLen = 0uz;
-		int status = 0;
+		int status = -1;
 		auto res =
 			__cxxabiv1::__cxa_demangle(in.c_str(), nullptr, &resLen, &status);
+		if (status == -1) {
+			std::println(
+				stderr,
+				"[demangler] [fatal] __cxa_demangle did not set a status");
+			std::abort();
+		} else if (status != 0) {
+			return {};
+		}
 		std::string ret = {res, resLen};
 		std::free(res);
-		return ret;
+		return {std::move(ret)};
 	}
 
 	namespace demangler {
@@ -58,9 +68,12 @@ namespace {
 			}
 
 			std::string input = {inputStr, (size_t)inputStrSize};
-			auto output = demangle(input);
-
-			return PyUnicode_FromString(output.c_str());
+			std::optional<std::string> output = demangle(input);
+			if (output.has_value()) {
+				return PyUnicode_FromString(output->c_str());
+			} else {
+                return PyUnicode_FromString(input.c_str());
+			}
 		}
 
 		PyMethodDef methods[] = {
