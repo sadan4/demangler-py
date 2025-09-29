@@ -11,18 +11,17 @@ sources = glob("**/*.cpp", root_dir=BASE_DIR, recursive=True, include_hidden=Fal
 
 sources = list(map(lambda src_path: path.join(BASE_DIR, src_path), sources))
 
-LIBCXXABI_A_PATH = environ.get("LIBCXXABI_A_PATH")
-
-if LIBCXXABI_A_PATH is None:
-    print("LIBCXXABI_A_PATH is unset. Exiting.", file=stderr)
-    exit(-1)
+# LIBCXXABI_A_PATH = environ.get("LIBCXXABI_A_PATH")
+#
+# if LIBCXXABI_A_PATH is None:
+#     print("LIBCXXABI_A_PATH is unset. Exiting.", file=stderr)
+#     exit(-1)
 
 module = Extension(
     "demangler",
     sources=sources,
-    extra_compile_args=["--std=c++23", "-Wall", "-O3", "-flto=auto"],
-    extra_link_args=["-Wall", "-flto=auto"],
-    # extra_objects=[LIBCXXABI_A_PATH]
+    extra_compile_args=["--std=c++23", "-Wall", "-O3", "-flto=auto", "-g0"],
+    extra_link_args=["-Wall", "-flto=auto", "-g0", "-s"],
     libraries=["c++abi"]
 )
 
