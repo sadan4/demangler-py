@@ -1,0 +1,5 @@
+.direnv
+venv
+.cache/clangd/index
+compile_commands.json
+build

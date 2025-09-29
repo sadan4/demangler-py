@@ -1,0 +1,34 @@
+#!/usr/bin/env python3
+from setuptools import setup, Extension
+from os import path, environ
+from sys import stderr
+from glob import glob
+
+BASE_DIR = path.dirname(__file__)
+BASE_DIR = path.join("src")
+
+sources = glob("**/*.cpp", root_dir=BASE_DIR, recursive=True, include_hidden=False)
+
+sources = list(map(lambda src_path: path.join(BASE_DIR, src_path), sources))
+
+LIBCXXABI_A_PATH = environ.get("LIBCXXABI_A_PATH")
+
+if LIBCXXABI_A_PATH is None:
+    print("LIBCXXABI_A_PATH is unset. Exiting.", file=stderr)
+    exit(-1)
+
+module = Extension(
+    "demangler",
+    sources=sources,
+    extra_compile_args=["--std=c++23", "-Wall", "-O3", "-flto=auto"],
+    extra_link_args=["-Wall", "-flto=auto"],
+    # extra_objects=[LIBCXXABI_A_PATH]
+    libraries=["c++abi"]
+)
+
+setup(
+    name="demangler",
+    version="1.0",
+    description="Demangle mangled c++ names from python",
+    ext_modules=[module],
+)
